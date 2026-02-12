@@ -3,8 +3,10 @@ import { RecommendationResponseSchema, type RecommendationResponse } from './rec
 import { fetchCurves, fetchTrades, fetchPositions, type Curve, type Trade, type Position } from './goldsky'
 import { calculateMetrics, type OnChainMetrics } from './metrics'
 import { calculateTechnicalMetrics, type TechnicalMetrics } from './technicalMetrics'
+import { fetchNewsContext, emptyNewsContext, type NewsContext } from './news'
+import { fetchMarketContext, emptyMarketContext, type MarketContext } from './coingecko'
 
-export type DataSource = 'on_chain' | 'technical'
+export type DataSource = 'on_chain' | 'technical' | 'news' | 'market'
 
 export interface RecommendationConfig {
   enabledSources: DataSource[]
@@ -44,6 +46,12 @@ function buildSystemPrompt(enabledSources: DataSource[]): string {
   if (enabledSources.includes('technical')) {
     sourceDescriptions.push('technical indicators (price momentum, trade velocity, trend direction)')
   }
+  if (enabledSources.includes('news')) {
+    sourceDescriptions.push('recent crypto news and headline sentiment (bullish/bearish/neutral)')
+  }
+  if (enabledSources.includes('market')) {
+    sourceDescriptions.push('global market data and trends from CoinGecko (cap, volume, BTC/ETH, trending majors)')
+  }
 
   return `You are a skeptical DeFi analyst ranking RobinPump bonding curve tokens on Base. Your job is to identify the best current opportunities from a batch of tokens, using ${sourceDescriptions.join(' and ')}.
 
@@ -80,12 +88,69 @@ Each recommendation must have:
 - "contributingSources": array of source keys that were most relevant (${enabledSources.map((s) => `"${s}"`).join(', ')})
 - "suggestedAction": "strong_buy" | "buy" | "hold" | "avoid"
 - "riskLevel": "low" | "medium" | "high" | "critical"
-- "reasoning": object with optional keys "onChain" and "technical", each a brief analysis from that perspective`
+- "reasoning": object with optional keys "onChain", "technical", "news", and "market", each a brief analysis from that perspective`
+}
+
+function formatMarketContextForPrompt(market: MarketContext | null): string {
+  if (!market || market.totalMarketCapUsd === 0) return ''
+
+  const lines: string[] = []
+  lines.push('Global crypto market context (from CoinGecko):')
+  lines.push(
+    `- Total market cap: $${(market.totalMarketCapUsd / 1_000_000_000).toFixed(2)}B`,
+  )
+  lines.push(
+    `- 24h volume: $${(market.volume24hUsd / 1_000_000_000).toFixed(2)}B`,
+  )
+  lines.push(
+    `- Market cap change (24h): ${market.marketCapChange24hPercent.toFixed(2)}%`,
+  )
+  lines.push(
+    `- BTC dominance: ${market.btcDominancePercent.toFixed(2)}%, ETH dominance: ${market.ethDominancePercent.toFixed(2)}%`,
+  )
+  if (market.btcPriceUsd != null && market.ethPriceUsd != null) {
+    lines.push(
+      `- BTC price: $${market.btcPriceUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })} (${market.btcChange24hPercent != null ? market.btcChange24hPercent.toFixed(2) : 'N/A'}% 24h)`,
+    )
+    lines.push(
+      `- ETH price: $${market.ethPriceUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })} (${market.ethChange24hPercent != null ? market.ethChange24hPercent.toFixed(2) : 'N/A'}% 24h)`,
+    )
+  }
+  if (market.trendingTokens.length > 0) {
+    const list = market.trendingTokens.slice(0, 5).map((t) => {
+      const rank = t.marketCapRank != null ? `#${t.marketCapRank}` : 'unranked'
+      return `${t.name} (${t.symbol}, ${rank})`
+    }).join('; ')
+    lines.push(`- Trending majors (24h search interest): ${list}`)
+  }
+  lines.push(
+    'Use this to calibrate risk (e.g. risk-on vs risk-off, majors up or down).',
+  )
+  return lines.join('\n')
+}
+
+function formatNewsContextForPrompt(news: NewsContext | null): string {
+  if (!news || news.items.length === 0) return ''
+
+  const lines: string[] = []
+  lines.push('Recent crypto news and sentiment (from News API):')
+  lines.push(`- Overall headline sentiment: ${news.marketSentiment}.`)
+  lines.push(`- Summary: ${news.summary}`)
+  lines.push('Sample headlines (sentiment):')
+  news.items.slice(0, 8).forEach((item) => {
+    lines.push(`- [${item.sentiment}] ${item.title}`)
+  })
+  lines.push(
+    'Use this to calibrate risk (e.g. bearish news may justify more conservative scores).',
+  )
+  return lines.join('\n')
 }
 
 function buildUserPrompt(
   tokens: TokenData[],
   enabledSources: DataSource[],
+  marketContext: MarketContext | null,
+  newsContext: NewsContext | null,
 ): string {
   const tokenBlocks = tokens.map((t, i) => {
     const parts: string[] = [
@@ -121,7 +186,17 @@ function buildUserPrompt(
     return parts.join('\n')
   })
 
-  return `Analyze these ${tokens.length} RobinPump tokens and recommend the top 10 (or fewer if most are low quality). Rank them by overall quality.\n\n${tokenBlocks.join('\n\n---\n\n')}`
+  const marketSection = formatMarketContextForPrompt(marketContext)
+  const newsSection = formatNewsContextForPrompt(newsContext)
+  const header = `Analyze these ${tokens.length} RobinPump tokens and recommend the top 10 (or fewer if most are low quality). Rank them by overall quality.`
+
+  const pieces = []
+  if (marketSection) pieces.push(marketSection)
+  if (newsSection) pieces.push(newsSection)
+  pieces.push(header)
+  pieces.push(tokenBlocks.join('\n\n---\n\n'))
+
+  return pieces.join('\n\n')
 }
 
 // --- Data fetching ---
@@ -151,6 +226,13 @@ async function fetchAllTokenData(curves: Curve[]): Promise<TokenData[]> {
 }
 
 // --- Main entry point ---
+//
+// Pipeline: On-Chain + Technical + News + Market → AI analysis
+// 1. Start Market (CoinGecko) and News (News API) fetches in parallel (when enabled).
+// 2. Fetch token list (Goldsky curves), then per-token trades/positions → on-chain + technical metrics.
+// 3. Pre-filter to top 20 tokens by composite score.
+// 4. Build prompt from enabled sources (market context, news context, token blocks with on-chain/technical).
+// 5. Call OpenAI; parse and validate JSON response.
 
 export type AnalysisStep = 'fetching_tokens' | 'computing_metrics' | 'running_ai' | 'done'
 
@@ -170,14 +252,49 @@ export async function getRecommendations(
     throw new Error('At least one data source must be enabled')
   }
 
+  const marketContextPromise = config.enabledSources.includes('market')
+    ? (async () => {
+        try {
+          return await fetchMarketContext()
+        } catch (err) {
+          console.error('Failed to fetch CoinGecko market context', err)
+          return emptyMarketContext()
+        }
+      })()
+    : Promise.resolve<MarketContext | null>(null)
+
+  const newsContextPromise =
+    config.enabledSources.includes('news') ?
+      (async () => {
+        try {
+          return await fetchNewsContext()
+        } catch (err) {
+          console.error('Failed to fetch news context', err)
+          return emptyNewsContext()
+        }
+      })()
+    : Promise.resolve<NewsContext | null>(null)
+
   // Step 1: Fetch all active (non-graduated) tokens
   onProgress?.('fetching_tokens')
-  const curves = await fetchCurves('totalVolumeEth', 50)
+  let curves
+  try {
+    curves = await fetchCurves('totalVolumeEth', 50)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    throw new Error(`Token data: ${msg}`)
+  }
   const activeCurves = curves.filter((c) => !c.graduated)
 
   // Step 2: Fetch detailed data and compute metrics
   onProgress?.('computing_metrics')
-  const allTokenData = await fetchAllTokenData(activeCurves)
+  let allTokenData
+  try {
+    allTokenData = await fetchAllTokenData(activeCurves)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    throw new Error(`Token metrics: ${msg}`)
+  }
 
   // Step 3: Pre-filter to top 20 by composite score
   const sorted = [...allTokenData].sort(
@@ -185,25 +302,45 @@ export async function getRecommendations(
   )
   const top20 = sorted.slice(0, 20)
 
+  const [marketContext, newsContext] = await Promise.all([
+    marketContextPromise,
+    newsContextPromise,
+  ])
+
   // Step 4: Build prompt and call GPT-4o
   onProgress?.('running_ai')
   const client = new OpenAI({ apiKey, baseURL, dangerouslyAllowBrowser: true })
 
-  const response = await client.chat.completions.create({
-    model,
-    temperature: 0.3,
-    messages: [
-      { role: 'system', content: buildSystemPrompt(config.enabledSources) },
-      { role: 'user', content: buildUserPrompt(top20, config.enabledSources) },
-    ],
-    response_format: { type: 'json_object' },
-  })
+  let content: string
+  try {
+    const response = await client.chat.completions.create({
+      model,
+      temperature: 0.3,
+      messages: [
+        { role: 'system', content: buildSystemPrompt(config.enabledSources) },
+        {
+          role: 'user',
+          content: buildUserPrompt(top20, config.enabledSources, marketContext, newsContext),
+        },
+      ],
+      response_format: { type: 'json_object' },
+    })
+    content = response.choices[0]?.message?.content ?? ''
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    throw new Error(`AI request: ${msg}`)
+  }
 
-  const content = response.choices[0]?.message?.content
-  if (!content) {
+  if (!content.trim()) {
     throw new Error('Empty LLM response')
   }
 
-  onProgress?.('done')
-  return RecommendationResponseSchema.parse(JSON.parse(content))
+  try {
+    const parsed = JSON.parse(content)
+    onProgress?.('done')
+    return RecommendationResponseSchema.parse(parsed)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    throw new Error(`Invalid AI response (schema): ${msg.slice(0, 80)}`)
+  }
 }

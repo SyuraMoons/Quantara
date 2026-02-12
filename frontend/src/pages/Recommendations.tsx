@@ -5,13 +5,24 @@ import { useRecommendations } from '../hooks/useRecommendations'
 import { SourceToggle } from '../components/SourceToggle'
 import { RecommendationCard } from '../components/RecommendationCard'
 
-const ALL_SOURCES: DataSource[] = ['on_chain', 'technical']
+const ALL_SOURCES: DataSource[] = ['on_chain', 'technical', 'news', 'market']
 
-const STEP_LABELS: Record<AnalysisStep, string> = {
-  fetching_tokens: 'Fetching token data from on-chain...',
-  computing_metrics: 'Computing metrics for all tokens...',
-  running_ai: 'Running AI analysis (this may take 10-20s)...',
-  done: 'Done',
+function getStepLabel(step: AnalysisStep, enabledSources: Set<DataSource>): string {
+  const hasContext = enabledSources.has('market') || enabledSources.has('news')
+  switch (step) {
+    case 'fetching_tokens':
+      return hasContext
+        ? 'Fetching tokens, market & news context...'
+        : 'Fetching token data from on-chain...'
+    case 'computing_metrics':
+      return 'Computing on-chain & technical metrics...'
+    case 'running_ai':
+      return 'Running AI analysis (this may take 10-20s)...'
+    case 'done':
+      return 'Done'
+    default:
+      return 'Processing...'
+  }
 }
 
 function getSourcesFromStorage(): Set<DataSource> {
@@ -108,7 +119,7 @@ export function Recommendations() {
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
               <path d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" fill="currentColor" className="opacity-75" />
             </svg>
-            <span className="text-sm text-text-secondary">{STEP_LABELS[step]}</span>
+            <span className="text-sm text-text-secondary">{getStepLabel(step, enabledSources)}</span>
           </div>
 
           {/* Step indicators */}

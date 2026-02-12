@@ -23,6 +23,8 @@ function riskStyle(level: TokenRecommendation['riskLevel']): { bg: string; text:
 const SOURCE_LABELS: Record<string, string> = {
   on_chain: 'On-Chain',
   technical: 'Technical',
+  news: 'News',
+  market: 'Market',
 }
 
 interface RecommendationCardProps {
@@ -81,6 +83,18 @@ export function RecommendationCard({ recommendation, rank }: RecommendationCardP
         <div className="mt-2">
           <p className="text-[10px] font-medium text-text-muted">Technical</p>
           <p className="mt-0.5 text-xs text-text-secondary">{recommendation.reasoning.technical}</p>
+        </div>
+      )}
+      {recommendation.reasoning.news && (
+        <div className="mt-2">
+          <p className="text-[10px] font-medium text-text-muted">News</p>
+          <p className="mt-0.5 text-xs text-text-secondary">{recommendation.reasoning.news}</p>
+        </div>
+      )}
+      {recommendation.reasoning.market && (
+        <div className="mt-2">
+          <p className="text-[10px] font-medium text-text-muted">Market</p>
+          <p className="mt-0.5 text-xs text-text-secondary">{recommendation.reasoning.market}</p>
         </div>
       )}
 

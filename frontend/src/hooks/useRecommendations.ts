@@ -5,6 +5,23 @@ import { getRecommendationCache, saveRecommendationCache, demoRecommendation } f
 
 const COOLDOWN_MS = 60_000 // 60 seconds
 
+function normalizeRecommendationError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err)
+  if (msg.includes('Failed to fetch') || msg.toLowerCase().includes('network') || msg.toLowerCase().includes('load failed')) {
+    return 'Network error. Check your connection and try again.'
+  }
+  if (msg.includes('OPENAI_API_KEY') || msg.includes('api key') || msg.includes('401')) {
+    return 'Invalid or missing OpenAI API key. Check your .env configuration.'
+  }
+  if (msg.includes('rate limit') || msg.includes('429')) {
+    return 'Rate limit exceeded. Please wait a moment and try again.'
+  }
+  if (msg.includes('Empty LLM') || msg.includes('invalid response') || msg.includes('JSON')) {
+    return 'AI returned an invalid response. Please try again.'
+  }
+  return msg || 'Analysis failed. Please try again.'
+}
+
 export interface UseRecommendationsReturn {
   recommendations: RecommendationResponse | null
   loading: boolean
@@ -53,17 +70,26 @@ export function useRecommendations(): UseRecommendationsReturn {
 
       try {
         result = await getRecommendations(config, setStep)
-      } catch {
-        // Fallback to demo data when API is unavailable
-        result = demoRecommendation
+      } catch (err) {
+        const hasApiKey = Boolean(import.meta.env.VITE_OPENAI_API_KEY)
+        if (!hasApiKey) {
+          result = demoRecommendation
+        } else {
+          const message = normalizeRecommendationError(err)
+          setError(message)
+          setLoading(false)
+          setStep(null)
+          return
+        }
       }
 
       setRecommendations(result)
       saveRecommendationCache(result)
       setCachedAt(Date.now())
+      setError(null)
       startCooldown()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Analysis failed')
+      setError(normalizeRecommendationError(err))
     } finally {
       setLoading(false)
       setStep(null)

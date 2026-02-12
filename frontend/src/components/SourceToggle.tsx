@@ -9,6 +9,14 @@ const SOURCE_INFO: Record<DataSource, { label: string; description: string }> = 
     label: 'Technical',
     description: 'Price momentum, trade velocity, trend direction',
   },
+  news: {
+    label: 'News',
+    description: 'Crypto headlines & sentiment (News API)',
+  },
+  market: {
+    label: 'Market',
+    description: 'Global cap, BTC/ETH, trending majors (CoinGecko)',
+  },
 }
 
 interface SourceToggleProps {

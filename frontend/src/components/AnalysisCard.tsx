@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import type { Curve, Trade, Position } from '../lib/goldsky'
 import type { TokenAnalysis, RiskFlag, SuggestedAction } from '../lib/analysisSchema'
 import { analyzeToken } from '../lib/analyzer'
@@ -6,6 +6,7 @@ import { calculateMetrics } from '../lib/metrics'
 import { fetchTokenMetadata } from '../lib/metadata'
 import { getDemoAnalysis, getAnalysisFromCache, saveAnalysisToCache } from '../lib/demoAnalysis'
 import { ScoreBadge } from './ScoreBadge'
+import { useSectionContext } from '../lib/sectionContext'
 
 interface AnalysisCardProps {
   curve: Curve
@@ -105,6 +106,8 @@ export function AnalysisCard({ curve, trades, positions }: AnalysisCardProps) {
   )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const cardRef = useRef<HTMLDivElement | null>(null)
+  const { setText: setSectionText } = useSectionContext()
 
   const runAnalysis = useCallback(async () => {
     setLoading(true)
@@ -131,9 +134,25 @@ export function AnalysisCard({ curve, trades, positions }: AnalysisCardProps) {
     }
   }, [curve, trades, positions])
 
+  // Expose this card's rendered text as the current "section" context
+  useEffect(() => {
+    const el = cardRef.current
+    if (!el) return
+
+    const text = el.innerText.replace(/\s+/g, ' ').trim()
+    if (text) {
+      // Limit length to avoid oversized prompts
+      setSectionText(text.slice(0, 6000))
+    }
+
+    return () => {
+      setSectionText(null)
+    }
+  }, [curve.id, setSectionText])
+
   if (!analysis) {
     return (
-      <div className="rounded-xl border border-border bg-bg-card p-6">
+      <div ref={cardRef} className="rounded-xl border border-border bg-bg-card p-6">
         <h3 className="font-display text-base font-semibold text-text-primary">AI Analysis</h3>
         <p className="mt-2 text-sm text-text-muted">
           Get an AI-powered evaluation of this token's idea quality, on-chain health, and curve position.
@@ -163,7 +182,7 @@ export function AnalysisCard({ curve, trades, positions }: AnalysisCardProps) {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-bg-card p-6">
+    <div ref={cardRef} className="rounded-xl border border-border bg-bg-card p-6">
       <div className="flex items-start justify-between">
         <h3 className="font-display text-base font-semibold text-text-primary">AI Analysis</h3>
         <ScoreBadge score={analysis.overall_score} size="lg" />
