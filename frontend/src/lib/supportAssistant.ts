@@ -154,7 +154,7 @@ export async function askSupportAgent(
   sectionText: string | null,
 ): Promise<SupportAgentResponse> {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY as string | undefined
-  const baseUrl = (import.meta.env.VITE_OPENAI_BASE_URL as string) || 'https://api.openai.com/v1'
+  const baseUrl = '/api/openai'
   const model = (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o'
 
   if (!apiKey) {

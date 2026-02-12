@@ -15,6 +15,11 @@ export default defineConfig({
             '/api/public/project_cmjjrebt3mxpt01rm9yi04vqq/subgraphs/pump-charts/v2/gn',
           ),
       },
+      '/api/openai': {
+        target: 'https://newapi.deepwisdom.ai',
+        changeOrigin: true,
+        rewrite: (path) => path.replace('/api/openai', '/v1'),
+      },
     },
   },
 })
