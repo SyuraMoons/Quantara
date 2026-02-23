@@ -102,12 +102,21 @@ export function Waitlist() {
         {/* Social */}
         <div className="mt-8 flex items-center justify-center gap-6 text-sm text-text-muted">
           <a
-            href="https://x.com/quantara_ai"
+            href="https://x.com/QuantaraQnti"
             target="_blank"
             rel="noopener noreferrer"
             className="transition-colors hover:text-text-primary"
           >
             Follow on X
+          </a>
+          <span className="text-border">|</span>
+          <a
+            href="https://linkedin.com/in/quantara-a7ab443b2"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors hover:text-text-primary"
+          >
+            LinkedIn
           </a>
           <span className="text-border">|</span>
           <a
