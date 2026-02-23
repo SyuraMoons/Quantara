@@ -27,14 +27,14 @@ function getStepLabel(step: AnalysisStep, enabledSources: Set<DataSource>): stri
 
 function getSourcesFromStorage(): Set<DataSource> {
   try {
-    const raw = localStorage.getItem('robinlens:rec-sources')
+    const raw = localStorage.getItem('quantara:rec-sources')
     if (raw) return new Set(JSON.parse(raw) as DataSource[])
   } catch { /* ignore */ }
   return new Set(ALL_SOURCES)
 }
 
 function saveSourcesStorage(sources: Set<DataSource>): void {
-  localStorage.setItem('robinlens:rec-sources', JSON.stringify([...sources]))
+  localStorage.setItem('quantara:rec-sources', JSON.stringify([...sources]))
 }
 
 export function Recommendations() {

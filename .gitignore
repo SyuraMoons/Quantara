@@ -130,3 +130,9 @@ Desktop.ini
 # Build artifacts
 *.tsbuildinfo
 smartcontract/lib/forge-std/
+
+# Screenshots & scratch dirs
+*.png
+newideatodev/
+AGENTS.md
+docs/

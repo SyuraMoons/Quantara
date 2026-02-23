@@ -1,6 +1,6 @@
-# RobinLens
+# Quantara
 
-> AI-Powered DeFi Token Analysis and Trading Platform for RobinPump on Base
+> AI-Powered Token Analyst for Bonding Curves on Base
 
 ![EasyA Consensus Hong Kong 2026](https://img.shields.io/badge/EasyA%20Consensus-Hong%20Kong%202026-blue)
 ![DeFi Track](https://img.shields.io/badge/Track-DeFi-green)
@@ -11,9 +11,9 @@
 
 ---
 
-## What is RobinLens?
+## What is Quantara?
 
-RobinLens brings AI-driven signal detection to the RobinPump bonding curve ecosystem on Base. It scores tokens across idea quality, on-chain health, and curve position so traders can act on data rather than hype.
+Quantara brings AI-driven signal detection to bonding curve tokens on Base. It scores tokens across idea quality, on-chain health, and curve position so traders can act on data rather than hype.
 
 **Core capabilities:**
 
@@ -143,7 +143,7 @@ Top 50 traders ranked by realized PnL across all positions.
 
 ```bash
 git clone https://github.com/SyuraMoons/RobinLens.git
-cd RobinLens/frontend
+cd Quantara/frontend
 cp .env.example .env
 ```
 
@@ -235,7 +235,7 @@ smartcontract/src/
 
 ## Team
 
-Built at EasyA Consensus Hong Kong 2026 by Team PI (SyuraMoons).
+Built by Team Quantara. EasyA Kickstart Accelerator 2026.
 
 ---
 

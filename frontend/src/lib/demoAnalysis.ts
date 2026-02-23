@@ -77,7 +77,7 @@ export function getDemoAnalysis(curveId: string): TokenAnalysis {
 }
 
 export function getAnalysisFromCache(curveId: string): TokenAnalysis | null {
-  const cached = localStorage.getItem(`robinlens:analysis:${curveId}`)
+  const cached = localStorage.getItem(`quantara:analysis:${curveId}`)
   if (!cached) return null
   try {
     return JSON.parse(cached) as TokenAnalysis
@@ -87,5 +87,5 @@ export function getAnalysisFromCache(curveId: string): TokenAnalysis | null {
 }
 
 export function saveAnalysisToCache(curveId: string, analysis: TokenAnalysis): void {
-  localStorage.setItem(`robinlens:analysis:${curveId}`, JSON.stringify(analysis))
+  localStorage.setItem(`quantara:analysis:${curveId}`, JSON.stringify(analysis))
 }

@@ -21,10 +21,10 @@ import {
 } from './goldsky'
 // Fallback description when we can't build a live snapshot.
 const DEFAULT_PAGE_CONTEXT = `
-RobinLens is an AI-powered DeFi token analysis and trading frontend for RobinPump (a bonding curve token launchpad on Base).
+Quantara is an AI-powered DeFi token analysis and trading platform for bonding curve tokens on Base.
 `
 
-const SYSTEM_PROMPT = `You are an expert support agent for RobinLens.
+const SYSTEM_PROMPT = `You are an expert support agent for Quantara.
 Your goal is to provide data-driven insights based strictly on the retrieved context for the **current page**.
 
 Response guidelines:
