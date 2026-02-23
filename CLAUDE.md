@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-RobinLens is an AI-powered DeFi token analysis and trading frontend for RobinPump (a bonding curve token launchpad on Base). Pure client-side React app with no backend -- data comes from Goldsky Subgraph (GraphQL), OpenAI API, IPFS (Pinata), and direct Base RPC calls via ethers.js.
+Quantara is an AI-powered DeFi token analysis and trading platform for bonding curve tokens on Base. Pure client-side React app with no backend -- data comes from Goldsky Subgraph (GraphQL), OpenAI API, IPFS (Pinata), and direct Base RPC calls via ethers.js.
 
 ## Commands
 

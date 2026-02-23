@@ -1,6 +1,6 @@
 import type { RecommendationResponse } from './recommendationSchema'
 
-const CACHE_KEY = 'robinlens:recommendations'
+const CACHE_KEY = 'quantara:recommendations'
 const CACHE_TTL_MS = 15 * 60 * 1000 // 15 minutes
 
 interface CachedRecommendation {

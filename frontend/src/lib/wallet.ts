@@ -1,7 +1,7 @@
 import { BrowserProvider, formatEther, type JsonRpcSigner } from 'ethers'
 import { ACTIVE_CHAIN } from './chains'
 
-const STORAGE_KEY = 'robinlens:wallet-connected'
+const STORAGE_KEY = 'quantara:wallet-connected'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Eth = any

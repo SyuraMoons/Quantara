@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { path: '/', label: 'Feed' },
   { path: '/recommendations', label: 'AI Picks' },
   { path: '/leaderboard', label: 'Leaderboard' },
+  { path: '/waitlist', label: 'Waitlist' },
 ] as const
 
 export function Navbar() {
@@ -21,7 +22,7 @@ export function Navbar() {
             </svg>
           </div>
           <span className="font-display text-lg font-semibold text-text-primary">
-            RobinLens
+            Quantara
           </span>
         </Link>
 

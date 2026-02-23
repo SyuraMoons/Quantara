@@ -48,7 +48,7 @@ export function TokenFeed() {
           See through the noise.
         </h1>
         <p className="mt-2 max-w-xl text-sm leading-relaxed text-text-secondary">
-          RobinLens scores every RobinPump token across idea quality, on-chain health, and curve position -- so you can trade with signal, not hype.
+          Quantara scores every bonding curve token across idea quality, on-chain health, and curve position -- so you can trade with signal, not hype.
         </p>
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[

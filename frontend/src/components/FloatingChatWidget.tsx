@@ -25,7 +25,7 @@ export function FloatingChatWidget() {
       id: 1,
       role: 'assistant',
       content:
-        'Hi, I’m your **RobinLens AI Assistant**.\n\nAsk me anything about how this app works or how to interpret the data.',
+        "Hi, I’m your **Quantara AI Assistant**.\n\nAsk me anything about how this app works or how to interpret the data.",
     },
   ])
   const [loading, setLoading] = useState(false)
