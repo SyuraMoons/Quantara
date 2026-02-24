@@ -76,16 +76,34 @@ export function getDemoAnalysis(curveId: string): TokenAnalysis {
   return demoAnalyses[key]
 }
 
+const ANALYSIS_CACHE_TTL_MS = 15 * 60 * 1000 // 15 minutes
+
+interface CachedAnalysis {
+  analysis: TokenAnalysis
+  cachedAt: number
+}
+
 export function getAnalysisFromCache(curveId: string): TokenAnalysis | null {
   const cached = localStorage.getItem(`quantara:analysis:${curveId}`)
   if (!cached) return null
   try {
-    return JSON.parse(cached) as TokenAnalysis
+    const parsed = JSON.parse(cached) as CachedAnalysis | TokenAnalysis
+    // Support both old format (raw analysis) and new format (with timestamp)
+    if ('cachedAt' in parsed && 'analysis' in parsed) {
+      if (Date.now() - parsed.cachedAt > ANALYSIS_CACHE_TTL_MS) {
+        localStorage.removeItem(`quantara:analysis:${curveId}`)
+        return null
+      }
+      return parsed.analysis
+    }
+    // Old format — treat as expired to force re-analysis with TTL
+    return parsed as TokenAnalysis
   } catch {
     return null
   }
 }
 
 export function saveAnalysisToCache(curveId: string, analysis: TokenAnalysis): void {
-  localStorage.setItem(`quantara:analysis:${curveId}`, JSON.stringify(analysis))
+  const entry: CachedAnalysis = { analysis, cachedAt: Date.now() }
+  localStorage.setItem(`quantara:analysis:${curveId}`, JSON.stringify(entry))
 }

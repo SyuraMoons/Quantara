@@ -6,15 +6,16 @@ interface HolderChartProps {
 }
 
 export function HolderChart({ positions }: HolderChartProps) {
-  const holdings = positions
+  const allHoldings = positions
     .map((p) => ({
       address: p.user.id,
       held: Math.max(0, parseFloat(p.totalTokensBought) - parseFloat(p.totalTokensSold)),
     }))
     .filter((h) => h.held > 0)
     .sort((a, b) => b.held - a.held)
-    .slice(0, 10)
 
+  const totalAllHolders = allHoldings.reduce((s, h) => s + h.held, 0)
+  const holdings = allHoldings.slice(0, 10)
   const total = holdings.reduce((s, h) => s + h.held, 0)
 
   if (holdings.length === 0) {
@@ -65,7 +66,7 @@ export function HolderChart({ positions }: HolderChartProps) {
       <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-xs">
         <span className="text-text-muted">Top 10 Concentration</span>
         <span className="font-mono font-semibold text-text-primary">
-          {total > 0 ? ((holdings.reduce((s, h) => s + h.held, 0) / total) * 100).toFixed(1) : 0}%
+          {totalAllHolders > 0 ? ((total / totalAllHolders) * 100).toFixed(1) : 0}%
         </span>
       </div>
     </div>

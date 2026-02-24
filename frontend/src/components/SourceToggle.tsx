@@ -17,6 +17,10 @@ const SOURCE_INFO: Record<DataSource, { label: string; description: string }> = 
     label: 'Market',
     description: 'Global cap, BTC/ETH, trending majors (CoinGecko)',
   },
+  ml: {
+    label: 'ML Model',
+    description: 'XGBoost price predictions (24h/7d probability, direction)',
+  },
 }
 
 interface SourceToggleProps {

@@ -4,8 +4,9 @@ import type { AnalysisStep } from '../lib/recommender'
 import { useRecommendations } from '../hooks/useRecommendations'
 import { SourceToggle } from '../components/SourceToggle'
 import { RecommendationCard } from '../components/RecommendationCard'
+import { BatchBuyButton } from '../components/BatchBuyButton'
 
-const ALL_SOURCES: DataSource[] = ['on_chain', 'technical', 'news', 'market']
+const ALL_SOURCES: DataSource[] = ['on_chain', 'technical', 'news', 'market', 'ml']
 
 function getStepLabel(step: AnalysisStep, enabledSources: Set<DataSource>): string {
   const hasContext = enabledSources.has('market') || enabledSources.has('news')
@@ -167,6 +168,11 @@ export function Recommendations() {
             <p className="mt-1 text-sm leading-relaxed text-text-secondary">
               {recommendations.marketSummary}
             </p>
+          </div>
+
+          {/* Batch buy */}
+          <div className="mt-4">
+            <BatchBuyButton recommendations={recommendations.recommendations} />
           </div>
 
           {/* Recommendation cards */}

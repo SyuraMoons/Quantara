@@ -20,6 +20,10 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace('/api/openai', '/v1'),
       },
+      '/api/predict': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
     },
   },
 })

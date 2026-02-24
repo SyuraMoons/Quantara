@@ -64,8 +64,9 @@ smartcontract/src/
 | OpenAI GPT-4o | `lib/analyzer.ts` | Single-token AI scoring, validated by `lib/analysisSchema.ts` (Zod) |
 | OpenAI GPT-4o | `lib/recommender.ts` | Batch top-10 recommendations, validated by `lib/recommendationSchema.ts` (Zod) |
 | OpenAI GPT-4o | `lib/supportAssistant.ts` | Floating chat widget (context-aware support agent) |
+| XGBoost ML Model | `lib/mlPredictor.ts` → `api/predict.py` | 38-feature price prediction (24h/7d probability, direction, confidence) |
 | Pinata IPFS | `lib/metadata.ts` | Token name, description, image from URI |
-| Base RPC | `lib/contracts.ts` | Price quotes, buy/sell execution via bonding curve or RobinLensRouter |
+| Base RPC | `lib/contracts.ts` | Price quotes, buy/sell/multiBuy execution via bonding curve or RobinLensRouter |
 
 ### CORS Proxy Pattern
 

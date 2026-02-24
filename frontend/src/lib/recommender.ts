@@ -5,8 +5,9 @@ import { calculateMetrics, type OnChainMetrics } from './metrics'
 import { calculateTechnicalMetrics, type TechnicalMetrics } from './technicalMetrics'
 import { fetchNewsContext, emptyNewsContext, type NewsContext } from './news'
 import { fetchMarketContext, emptyMarketContext, type MarketContext } from './coingecko'
+import { tradesToDailyPrices, type MLPrediction } from './mlPredictor'
 
-export type DataSource = 'on_chain' | 'technical' | 'news' | 'market'
+export type DataSource = 'on_chain' | 'technical' | 'news' | 'market' | 'ml'
 
 export interface RecommendationConfig {
   enabledSources: DataSource[]
@@ -18,21 +19,19 @@ interface TokenData {
   technicalMetrics: TechnicalMetrics
   trades: Trade[]
   positions: Position[]
+  mlPrediction?: MLPrediction | null
 }
 
 // --- Pre-filter scoring ---
 
 function preFilterScore(metrics: OnChainMetrics): number {
-  const values = [
-    metrics.tradeCount,
-    metrics.holderCount,
-    metrics.volumeMomentum,
-    1 - metrics.top10Concentration,
-  ]
+  // Normalize each dimension to 0-1 range with sensible caps, then average equally
+  const tradeNorm = Math.min(metrics.tradeCount / 200, 1)           // cap at 200 trades
+  const holderNorm = Math.min(metrics.holderCount / 100, 1)          // cap at 100 holders
+  const momentumNorm = Math.min(metrics.volumeMomentum / 5, 1)       // cap at 5x momentum
+  const distributionNorm = 1 - metrics.top10Concentration             // already 0-1
 
-  // Each dimension gets equal weight, simple average of normalized rank scores
-  // Actual normalization happens across the full list
-  return values.reduce((sum, v) => sum + v, 0)
+  return (tradeNorm + holderNorm + momentumNorm + distributionNorm) / 4
 }
 
 // --- Prompt construction ---
@@ -51,6 +50,9 @@ function buildSystemPrompt(enabledSources: DataSource[]): string {
   }
   if (enabledSources.includes('market')) {
     sourceDescriptions.push('global market data and trends from CoinGecko (cap, volume, BTC/ETH, trending majors)')
+  }
+  if (enabledSources.includes('ml')) {
+    sourceDescriptions.push('XGBoost ML model predictions (24h/7d price-up probability, direction, confidence)')
   }
 
   return `You are a skeptical DeFi analyst ranking RobinPump bonding curve tokens on Base. Your job is to identify the best current opportunities from a batch of tokens, using ${sourceDescriptions.join(' and ')}.
@@ -88,7 +90,7 @@ Each recommendation must have:
 - "contributingSources": array of source keys that were most relevant (${enabledSources.map((s) => `"${s}"`).join(', ')})
 - "suggestedAction": "strong_buy" | "buy" | "hold" | "avoid"
 - "riskLevel": "low" | "medium" | "high" | "critical"
-- "reasoning": object with optional keys "onChain", "technical", "news", and "market", each a brief analysis from that perspective`
+- "reasoning": object with optional keys "onChain", "technical", "news", "market", and "ml", each a brief analysis from that perspective`
 }
 
 function formatMarketContextForPrompt(market: MarketContext | null): string {
@@ -180,6 +182,17 @@ function buildUserPrompt(
         `- Price change (24h): ${(t.technicalMetrics.priceChange24h * 100).toFixed(2)}%`,
         `- Trade velocity: ${t.technicalMetrics.tradeVelocity.toFixed(2)}x`,
         `- Trend: ${t.technicalMetrics.trendDirection}`,
+      )
+    }
+
+    if (enabledSources.includes('ml') && t.mlPrediction) {
+      parts.push(
+        `\nML Model prediction (XGBoost):`,
+        `- Verdict: ${t.mlPrediction.verdict}`,
+        `- Direction: ${t.mlPrediction.direction}`,
+        `- Prob up 24h: ${t.mlPrediction.prob_up_24h}%`,
+        `- Prob up 7d: ${t.mlPrediction.prob_up_7d}%`,
+        `- Confidence: ${t.mlPrediction.confidence}/10`,
       )
     }
 
@@ -306,6 +319,28 @@ export async function getRecommendations(
     marketContextPromise,
     newsContextPromise,
   ])
+
+  // Step 3b: Fetch ML predictions for top 20 (when ML source enabled)
+  if (config.enabledSources.includes('ml')) {
+    await Promise.all(
+      top20.map(async (t) => {
+        try {
+          const daily = tradesToDailyPrices(t.trades)
+          if (!daily) return
+          const res = await fetch('/api/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ closes: daily.closes, volumes: daily.volumes }),
+          })
+          if (res.ok) {
+            t.mlPrediction = await res.json()
+          }
+        } catch {
+          // ML prediction is best-effort; skip on failure
+        }
+      }),
+    )
+  }
 
   // Step 4: Build prompt and call GPT-4o
   onProgress?.('running_ai')

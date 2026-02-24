@@ -25,6 +25,7 @@ const SOURCE_LABELS: Record<string, string> = {
   technical: 'Technical',
   news: 'News',
   market: 'Market',
+  ml: 'ML Model',
 }
 
 interface RecommendationCardProps {
@@ -95,6 +96,12 @@ export function RecommendationCard({ recommendation, rank }: RecommendationCardP
         <div className="mt-2">
           <p className="text-[10px] font-medium text-text-muted">Market</p>
           <p className="mt-0.5 text-xs text-text-secondary">{recommendation.reasoning.market}</p>
+        </div>
+      )}
+      {recommendation.reasoning.ml && (
+        <div className="mt-2">
+          <p className="text-[10px] font-medium text-text-muted">ML Model</p>
+          <p className="mt-0.5 text-xs text-text-secondary">{recommendation.reasoning.ml}</p>
         </div>
       )}
 

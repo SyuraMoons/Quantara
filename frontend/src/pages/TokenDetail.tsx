@@ -4,6 +4,7 @@ import { useEthPrice } from '../hooks/useEthPrice'
 import { formatUsd, formatEth, formatAge, truncateAddress } from '../lib/format'
 import { basescanAddressUrl } from '../lib/chains'
 import { AnalysisCard } from '../components/AnalysisCard'
+import { MLPredictionCard } from '../components/MLPredictionCard'
 import { PriceChart } from '../components/PriceChart'
 import { TradeFeed } from '../components/TradeFeed'
 import { HolderChart } from '../components/HolderChart'
@@ -131,6 +132,7 @@ export function TokenDetail() {
         <div className="space-y-6 lg:col-span-2">
           <TradePanel curve={curve} onTradeSuccess={refetch} />
           <PositionCard curve={curve} />
+          <MLPredictionCard curveId={curve.id} trades={trades} />
           <AnalysisCard curve={curve} trades={trades} positions={positions} />
           <HolderChart positions={positions} />
         </div>

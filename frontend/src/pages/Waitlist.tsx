@@ -11,6 +11,12 @@ export function Waitlist() {
     setStatus('submitting')
     setErrorMsg('')
 
+    if (!supabase) {
+      setErrorMsg('Waitlist is not available right now.')
+      setStatus('error')
+      return
+    }
+
     const { error } = await supabase.from('waitlist').insert({ email: email.trim().toLowerCase() })
 
     if (error) {

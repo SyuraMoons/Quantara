@@ -1,6 +1,6 @@
 import { z } from 'zod/v4'
 
-const SOURCE_KEYS = ['on_chain', 'technical', 'news', 'market'] as const
+const SOURCE_KEYS = ['on_chain', 'technical', 'news', 'market', 'ml'] as const
 const ACTION_KEYS = ['strong_buy', 'buy', 'hold', 'avoid'] as const
 const RISK_KEYS = ['low', 'medium', 'high', 'critical'] as const
 
@@ -35,6 +35,7 @@ export const TokenRecommendationSchema = z.object({
       technical: z.string().optional(),
       news: z.string().optional(),
       market: z.string().optional(),
+      ml: z.string().optional(),
     }),
   ),
 })

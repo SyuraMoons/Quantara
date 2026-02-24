@@ -20,6 +20,7 @@ const ERC20_ABI = [
 const ROUTER_ABI = [
   'function buyToken(address curve, uint256 minTokensOut, uint256 deadline) external payable',
   'function sellToken(address curve, address token, uint256 tokenAmount, uint256 minEthOut, uint256 deadline) external',
+  'function multiBuy(address[] curves, uint256[] ethAmounts, uint256[] minTokensOutArr, uint256 deadline) external payable',
   'function quoteBuy(address curve, uint256 ethAmount) external view returns (uint256 tokensOut)',
   'function getPrice(address curve) external view returns (uint256 price)',
   'function isTradingActive(address curve) external view returns (bool active)',
@@ -162,3 +163,44 @@ export async function executeSell(
 }
 
 export { formatEther, parseEther }
+
+// --- Batch buy (multiBuy via router) ---
+
+export interface MultiBuyItem {
+  curveAddress: string
+  ethAmount: string // in ETH
+}
+
+export async function executeMultiBuy(
+  items: MultiBuyItem[],
+  signer: JsonRpcSigner,
+  slippageBps: number = 500,
+): Promise<TradeResult> {
+  const router = getRouterContract(signer)
+  if (!router) {
+    throw new Error('Router address not configured — multiBuy requires VITE_ROUTER_ADDRESS')
+  }
+
+  const deadline = Math.floor(Date.now() / 1000) + 300
+
+  // Get quotes for each item
+  const curves: string[] = []
+  const ethAmounts: bigint[] = []
+  const minTokensArr: bigint[] = []
+  let totalEth = BigInt(0)
+
+  for (const item of items) {
+    const ethWei = parseEther(item.ethAmount)
+    const tokensOut: bigint = await router.quoteBuy(item.curveAddress, ethWei)
+    const minTokens = tokensOut * BigInt(10000 - slippageBps) / BigInt(10000)
+
+    curves.push(item.curveAddress)
+    ethAmounts.push(ethWei)
+    minTokensArr.push(minTokens)
+    totalEth += ethWei
+  }
+
+  const tx = await router.multiBuy(curves, ethAmounts, minTokensArr, deadline, { value: totalEth })
+  await tx.wait()
+  return { txHash: tx.hash }
+}
