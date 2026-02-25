@@ -327,7 +327,8 @@ export async function getRecommendations(
         try {
           const daily = tradesToDailyPrices(t.trades)
           if (!daily) return
-          const res = await fetch('/api/predict', {
+          const mlApiUrl = import.meta.env.VITE_ML_API_URL || '/api/predict'
+          const res = await fetch(mlApiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ closes: daily.closes, volumes: daily.volumes }),

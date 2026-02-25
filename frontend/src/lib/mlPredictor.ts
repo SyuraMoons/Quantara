@@ -1,9 +1,12 @@
 /**
  * ML Predictor Client
  * ====================
- * Calls the /api/predict Vercel Python serverless function
- * to get XGBoost-based price predictions.
+ * Calls the ML prediction API (Render or local) to get
+ * XGBoost-based price predictions.
  */
+
+// In production, points to the Render service. In dev, falls back to local proxy.
+const ML_API_URL = import.meta.env.VITE_ML_API_URL || '/api/predict'
 
 export interface MLPrediction {
   verdict: 'STRONG BUY' | 'BUY' | 'NEUTRAL' | 'AVOID' | 'SELL'
@@ -117,7 +120,7 @@ export async function getMLPrediction(
   const cached = getMLPredictionFromCache(curveId)
   if (cached) return cached
 
-  const response = await fetch('/api/predict', {
+  const response = await fetch(ML_API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
