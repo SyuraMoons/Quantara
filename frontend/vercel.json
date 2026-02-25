@@ -10,7 +10,7 @@
     },
     {
       "source": "/api/predict",
-      "destination": "https://quantara-ml-api.onrender.com/api/predict"
+      "destination": "https://quantara-ml-api.onrender.com/predict"
     },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
