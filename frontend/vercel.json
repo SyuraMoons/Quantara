@@ -8,6 +8,10 @@
       "source": "/api/openai/:path*",
       "destination": "https://newapi.deepwisdom.ai/v1/:path*"
     },
+    {
+      "source": "/api/predict",
+      "destination": "https://quantara-ml-api.onrender.com/api/predict"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
