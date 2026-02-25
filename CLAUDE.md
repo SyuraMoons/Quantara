@@ -34,7 +34,7 @@ forge test -vvv
 
 ```
 frontend/src/
-├── pages/          4 route pages (TokenFeed, TokenDetail, Leaderboard, Recommendations)
+├── pages/          5 route pages (TokenFeed, TokenDetail, Leaderboard, Recommendations, Waitlist)
 ├── components/     UI components (AnalysisCard, TradePanel, PriceChart, FloatingChatWidget, etc.)
 ├── hooks/          Data fetching & state (useCurves, useCurveDetail, useWallet, useTrade, useRecommendations, etc.)
 ├── lib/            Pure logic & API clients (React context split between sectionContext.ts and SectionContextProvider.tsx)
@@ -55,6 +55,7 @@ smartcontract/src/
 - `/token/:id` -- TokenDetail (analysis + chart + trading)
 - `/leaderboard` -- Top traders
 - `/recommendations` -- AI batch recommendations with configurable data sources
+- `/waitlist` -- Email waitlist landing page (Supabase)
 
 ### External Data Sources
 
@@ -66,6 +67,7 @@ smartcontract/src/
 | OpenAI GPT-4o | `lib/supportAssistant.ts` | Floating chat widget (context-aware support agent) |
 | Pinata IPFS | `lib/metadata.ts` | Token name, description, image from URI |
 | Base RPC | `lib/contracts.ts` | Price quotes, buy/sell execution via bonding curve or RobinLensRouter |
+| Supabase | `lib/supabase.ts` | Waitlist email collection |
 
 ### CORS Proxy Pattern
 
@@ -107,7 +109,15 @@ Variables (all prefixed `VITE_` for Vite client-side exposure):
 - `VITE_COINGECKO_PROXY` -- optional production proxy for market data requests
 - `VITE_NEWS_API_KEY` -- optional key for news data source in recommendations
 - `VITE_NEWS_API_PROXY` -- optional production proxy for news data requests
+- `VITE_SUPABASE_URL` -- Supabase project URL (for waitlist)
+- `VITE_SUPABASE_ANON_KEY` -- Supabase anon/publishable key
 
 ## Deployment
 
-Vercel. `frontend/vercel.json` has rewrites: `/api/subgraph` -> Goldsky, `/api/openai/*` -> deepwisdom.ai, and SPA fallback `(.*)` -> `/index.html`.
+Vercel (project name: `quantara`, URL: `quantara-app.vercel.app`). `frontend/vercel.json` has rewrites: `/api/subgraph` -> Goldsky, `/api/openai/*` -> deepwisdom.ai, and SPA fallback `(.*)` -> `/index.html`.
+
+## Notes
+
+- **Node version:** Vite 7 dev server requires Node 20+. Use `nvm use 22` if dev server fails with `crypto.hash is not a function`.
+- **localStorage keys** are prefixed `quantara:` (wallet state, analysis cache, recommendation cache, source toggles).
+- **GitHub repo:** `SyuraMoons/Quantara` (renamed from RobinLens; old URL redirects automatically).

@@ -12,7 +12,7 @@ export default defineConfig({
         rewrite: (path) =>
           path.replace(
             '/api/subgraph',
-            '/api/public/project_cmjjrebt3mxpt01rm9yi04vqq/subgraphs/pump-charts/v2/gn',
+            '/api/public/project_cmjjrebt3mxpt01rm9yi04vqq/subgraphs/pump-charts/v1/gn',
           ),
       },
       '/api/openai': {
