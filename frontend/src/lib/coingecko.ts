@@ -103,7 +103,7 @@ async function safeCoingeckoFetch<T>(
   path: string,
   params?: Record<string, string | number>,
 ): Promise<T | null> {
-  const url = new URL(path, BASE_URL)
+  const url = new URL(`${BASE_URL}${path}`)
   if (params) {
     for (const [key, value] of Object.entries(params)) {
       url.searchParams.set(key, String(value))
