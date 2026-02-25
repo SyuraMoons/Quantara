@@ -58,7 +58,7 @@ export async function analyzeToken(
   metrics: OnChainMetrics,
 ): Promise<TokenAnalysis> {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY
-  const baseURL = '/api/openai'
+  const baseURL = `${window.location.origin}/api/openai`
   const model = import.meta.env.VITE_OPENAI_MODEL || 'gpt-4o'
 
   if (!apiKey) {

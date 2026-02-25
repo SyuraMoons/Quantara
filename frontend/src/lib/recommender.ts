@@ -254,7 +254,7 @@ export async function getRecommendations(
   onProgress?: (step: AnalysisStep) => void,
 ): Promise<RecommendationResponse> {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY
-  const baseURL = '/api/openai'
+  const baseURL = `${window.location.origin}/api/openai`
   const model = import.meta.env.VITE_OPENAI_MODEL || 'gpt-4o'
 
   if (!apiKey) {
