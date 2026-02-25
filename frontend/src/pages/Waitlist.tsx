@@ -117,7 +117,7 @@ export function Waitlist() {
           </a>
           <span className="text-border">|</span>
           <a
-            href="https://linkedin.com/in/quantara-a7ab443b2"
+            href="https://www.linkedin.com/in/quantara-a7ab443b2/"
             target="_blank"
             rel="noopener noreferrer"
             className="transition-colors hover:text-text-primary"
