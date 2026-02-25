@@ -76,7 +76,7 @@ Both Goldsky and OpenAI calls go through `/api/subgraph` and `/api/openai` paths
 
 ### Key Design Decisions
 
-- **OpenAI client runs in browser** (`dangerouslyAllowBrowser: true`). API key exposed client-side via `VITE_OPENAI_API_KEY`. Both `analyzer.ts` and `recommender.ts` point `baseURL` at `/api/openai` to hit the proxy.
+- **OpenAI client runs in browser** (`dangerouslyAllowBrowser: true`). API key exposed client-side via `VITE_OPENAI_API_KEY`. Both `analyzer.ts` and `recommender.ts` use `${window.location.origin}/api/openai` as `baseURL` (absolute URL required by OpenAI SDK v6).
 - **Bonding curve ABI is reverse-engineered** (in `contracts.ts`), not from a verified source.
 - **RobinLensRouter** (`contracts.ts`): When `VITE_ROUTER_ADDRESS` is set, trades route through the router contract (adds slippage protection and batch buy). Otherwise falls back to direct curve calls.
 - **Chain switching:** `lib/chains.ts` exports `ACTIVE_CHAIN` based on `VITE_CHAIN` env var. Set to `sepolia` for testnet.
@@ -112,6 +112,7 @@ Variables (all prefixed `VITE_` for Vite client-side exposure):
 - `VITE_NEWS_API_PROXY` -- optional production proxy for news data requests
 - `VITE_SUPABASE_URL` -- Supabase project URL (for waitlist)
 - `VITE_SUPABASE_ANON_KEY` -- Supabase anon/publishable key
+- `VITE_ML_API_URL` -- ML prediction API URL (defaults to `/api/predict`, Vercel rewrites to Render)
 
 ## Deployment
 
